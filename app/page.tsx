@@ -98,7 +98,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-5 sm:px-6 lg:px-8">
+    <main className="min-h-screen min-h-dvh overflow-x-hidden bg-[radial-gradient(circle_at_top_left,rgba(244,220,192,0.68),transparent_30rem),linear-gradient(135deg,#fffaf1_0%,#fff4df_52%,#f8dfc0_100%)] px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 lg:grid lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
         <PhoneShell>
           <Header onBack={mode === "results" ? () => setMode("input") : undefined} />
