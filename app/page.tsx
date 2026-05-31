@@ -672,7 +672,6 @@ function EditEntryModal({
                 ))}
             </optgroup>
           </select>
-          <p className="mt-1.5 text-xs leading-5 text-roast/60">Based on typical Australian café servings</p>
 
           {!isCustomDrink ? (
             <>
@@ -704,6 +703,7 @@ function EditEntryModal({
             <span className="font-black">Estimated caffeine:</span>{" "}
             {isCustomDrink ? `${Math.max(0, Number(draft.caffeineMg) || 0)}mg, because you know your cup best.` : `${draft.caffeineMg}mg`}
           </div>
+          <p className="mt-1.5 text-xs leading-5 text-roast/55">Based on typical Australian café servings</p>
 
           <label className="mt-4 block text-sm font-black">Caffeine (mg)</label>
           <div className="mt-2 flex w-full max-w-full min-w-0 items-center rounded-2xl border border-latte bg-foam px-4 ring-caramel/30 focus-within:ring-4">
