@@ -87,7 +87,6 @@ export default function Home() {
       setHasLoadedEntries(true);
       return;
     }
-
     try {
       const parsedEntries = JSON.parse(savedEntries);
       if (Array.isArray(parsedEntries)) setEntries(parsedEntries);
@@ -103,24 +102,43 @@ export default function Home() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
   }, [entries, hasLoadedEntries]);
 
+  // FIX 1: Animation timing — liquid fill and mg counter are now driven by the
+  // same eased progress value, keeping them in perfect sync. The counter eases
+  // from 0 to totalMg over pourMs using a cubic-bezier, and fillPercent derives
+  // from the same progress variable so there is no drift between the two.
   useEffect(() => {
     if (mode !== "calculating") return;
     setCount(0);
     setCalculationProgress(0);
+
+    const anticipationMs = 280;
+    const pourMs = 3200;
+    const settleMs = 480;
     const started = Date.now();
-    const anticipationMs = 320;
-    const pourMs = 3500;
-    const settleMs = 520;
+
+    // Ease function: ease-in-out cubic
+    function easeInOut(t: number) {
+      return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    }
+
     const ticker = window.setInterval(() => {
       const elapsed = Date.now() - started;
-      const progress = Math.min(1, Math.max(0, (elapsed - anticipationMs) / pourMs));
-      setCalculationProgress(progress);
-      setCount(Math.round(totalMg * progress));
-      if (progress === 1) {
+      const raw = Math.min(1, Math.max(0, (elapsed - anticipationMs) / pourMs));
+      const eased = easeInOut(raw);
+
+      // Both fill and counter use the same eased progress — perfectly in sync
+      setCalculationProgress(eased);
+      setCount(Math.round(totalMg * eased));
+
+      if (raw >= 1) {
         window.clearInterval(ticker);
+        // Snap both to final values before transitioning
+        setCalculationProgress(1);
+        setCount(totalMg);
         window.setTimeout(() => setMode("results"), settleMs);
       }
-    }, 35);
+    }, 16); // ~60fps for smoothness
+
     return () => window.clearInterval(ticker);
   }, [mode, totalMg]);
 
@@ -138,7 +156,6 @@ export default function Home() {
     document.body.style.right = "0";
     document.body.style.width = "100%";
     document.body.style.overflow = "hidden";
-
     return () => {
       document.body.setAttribute("style", originalBodyStyle);
       window.scrollTo(0, scrollY);
@@ -202,7 +219,9 @@ export default function Home() {
       </div>
 
       <AnimatePresence>
-        {mode === "calculating" && results ? <CalculationOverlay count={count} progress={calculationProgress} total={totalMg} /> : null}
+        {mode === "calculating" && results ? (
+          <CalculationOverlay count={count} progress={calculationProgress} total={totalMg} />
+        ) : null}
       </AnimatePresence>
 
       <AnimatePresence>
@@ -270,12 +289,10 @@ function InputView({
       <h1 className="text-5xl font-black leading-[0.98] tracking-normal text-espresso">
         When will I <span className="text-caramel">crash?</span>
       </h1>
-      <p className="mt-4 max-w-xs text-base leading-6 text-roast">Log today’s cups and I’ll estimate when your productivity expires.</p>
-
+      <p className="mt-4 max-w-xs text-base leading-6 text-roast">Log today's cups and I'll estimate when your productivity expires.</p>
       <div className="mt-8">
         <h2 className="font-black">Your coffees</h2>
       </div>
-
       <div className="mt-3 space-y-3">
         {entries.length === 0 ? (
           <EmptyState onAdd={onAdd} />
@@ -285,11 +302,9 @@ function InputView({
           ))
         )}
       </div>
-
       <button onClick={onAdd} className="mt-3 w-full rounded-2xl border border-dashed border-roast/25 py-3 text-sm font-bold text-roast">
         + Add another
       </button>
-
       <h2 className="mt-6 font-black">Quick add</h2>
       <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-2">
         {quickAddOptions.map((preset) => (
@@ -303,7 +318,6 @@ function InputView({
           </button>
         ))}
       </div>
-
       <button
         onClick={onCalculate}
         disabled={entries.length === 0}
@@ -340,7 +354,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
         <img src="/coffee-mug.png" alt="" className="h-16 w-16 object-contain" />
       </div>
       <h2 className="mt-5 text-2xl font-black">Fresh cup, blank slate</h2>
-      <p className="mx-auto mt-2 max-w-[15rem] text-sm leading-6 text-roast/75">Add your first cup and we’ll see what the beans have planned.</p>
+      <p className="mx-auto mt-2 max-w-[15rem] text-sm leading-6 text-roast/75">Add your first cup and we'll see what the beans have planned.</p>
       <button onClick={onAdd} className="mt-6 rounded-2xl bg-caramel px-6 py-3 font-black text-white shadow-button">
         + Add your first cup
       </button>
@@ -351,22 +365,19 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
 function ResultsView({ results, onCurve }: { results: NonNullable<ReturnType<typeof getCrashResults>>; onCurve: () => void }) {
   return (
     <div className="text-center">
-      <h1 className="text-3xl font-black text-espresso">Here’s your caffeine forecast</h1>
-      <p className="mt-4 text-roast/75">Today’s running total</p>
+      <h1 className="text-3xl font-black text-espresso">Here's your caffeine forecast</h1>
+      <p className="mt-4 text-roast/75">Today's running total</p>
       <div className="mt-2 text-7xl font-black tracking-normal text-espresso">{results.totalMg}<span className="text-3xl">mg</span></div>
       <p className="text-lg">of liquid ambition</p>
-
       <div className="mx-auto mt-6 max-w-[260px] rounded-2xl bg-latte px-5 py-4">
         <p className="font-black">{statusIcon(results.status)} {results.status}</p>
         <p className="mt-1 text-sm text-roast/75">Proceed responsibly.</p>
       </div>
-
       <div className="mt-5 grid grid-cols-3 gap-2">
         <Metric title="Peak buzz" value={formatTime(results.peakTime)} icon="↗" />
         <Metric title="Crash window" value={`${formatTime(results.crashStart)} - ${formatTime(results.crashEnd)}`} icon="☠" />
         <Metric title="Sleep mood" value={results.sleepRisk} icon="☾" />
       </div>
-
       <div className="mt-4 rounded-2xl border border-latte bg-foam p-4 text-left">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -376,7 +387,6 @@ function ResultsView({ results, onCurve }: { results: NonNullable<ReturnType<typ
           <p className="max-w-[11rem] text-sm leading-5 text-roast/75">Estimated crash incoming. Water would like a word.</p>
         </div>
       </div>
-
       <button onClick={onCurve} className="mt-4 w-full rounded-2xl bg-gradient-to-r from-caramel to-[#c77925] px-5 py-4 font-black text-white shadow-button">
         ↗ See the caffeine trail
       </button>
@@ -418,7 +428,7 @@ function CurveCard({ results }: { results: NonNullable<ReturnType<typeof getCras
         </ResponsiveContainer>
       </div>
       <div className="mt-4 rounded-3xl border border-latte bg-foam p-4">
-        <h3 className="font-black">What’s brewing?</h3>
+        <h3 className="font-black">What's brewing?</h3>
         <ul className="mt-3 space-y-3 text-sm leading-5 text-roast/80">
           <li><b>Lift-off:</b> caffeine usually hits its stride 30–60 minutes after a cup.</li>
           <li><b>Peak:</b> your caffeine likely peaks around {formatTime(results.peakTime)}.</li>
@@ -434,7 +444,7 @@ function CurveEmpty() {
     <div className="rounded-3xl border border-dashed border-roast/25 bg-foam p-8 text-center">
       <img src="/coffee-mug.png" alt="" className="mx-auto h-20 w-20 object-contain" />
       <h2 className="mt-4 text-2xl font-black">No trail yet</h2>
-      <p className="mt-2 text-sm text-roast/70">Add a cup and we’ll draw the rise, glide, and gentle betrayal.</p>
+      <p className="mt-2 text-sm text-roast/70">Add a cup and we'll draw the rise, glide, and gentle betrayal.</p>
     </div>
   );
 }
@@ -484,6 +494,10 @@ function CaffeineCupAnimation({
   const showFoam = fillPercent > 4;
   const showSteam = fillPercent > 68 || isComplete;
 
+  // FIX 1: Liquid rect uses plain SVG attributes driven directly by the eased
+  // progress value from the parent. No Framer Motion transition on the rect —
+  // that was causing the duration:0 jump. The easing lives in the ticker above,
+  // so the SVG just mirrors the value every frame with no additional delay.
   return (
     <div className="mx-auto flex flex-col items-center">
       <motion.svg
@@ -529,67 +543,73 @@ function CaffeineCupAnimation({
           </clipPath>
         </defs>
 
+        {/* 1. Cup body — back */}
         <polygon points="32,78 168,78 156,260 44,260" fill="url(#cc-body)" />
         <polygon points="46,84 60,84 52,254 40,254" fill="white" opacity="0.06" />
         <ellipse cx="100" cy="260" rx="56" ry="5" fill="#4A1B0C" opacity="0.5" />
 
+        {/* 2. Liquid — clipped to interior, plain attributes updated each render */}
         <g clipPath="url(#cc-interior)">
-          <motion.rect
+          <rect
             x="36"
             y={liquidY}
             width="128"
-            height={fillHeight}
+            height={fillHeight + 6}
             fill="url(#cc-liq)"
-            initial={false}
-            animate={{ y: liquidY, height: fillHeight }}
-            transition={{ duration: 0 }}
           />
-
-          {showFoam ? (
-            <motion.rect
+          {showFoam && (
+            <rect
               x="36"
               y={Math.max(foamY, topY)}
               width="128"
               height="9"
               fill="url(#cc-foam)"
               opacity="0.92"
-              initial={false}
-              animate={{ y: Math.max(foamY, topY) }}
-              transition={{ duration: 0 }}
             />
-          ) : null}
+          )}
+          {showFoam && [
+            { cx: 68, r: 3 },
+            { cx: 100, r: 2.2 },
+            { cx: 130, r: 2.8 },
+            { cx: 52, r: 1.8 },
+            { cx: 148, r: 2 },
+          ].map((b, i) => (
+            <circle key={i} cx={b.cx} cy={liquidY + 4 + (i % 3)} r={b.r} fill="rgba(255,255,255,0.25)" />
+          ))}
         </g>
 
+        {/* 3. Sleeve + bean — front, over liquid */}
         <polygon points="36,155 164,155 160,200 40,200" fill="url(#cc-sleeve)" />
         <line x1="36" y1="155" x2="164" y2="155" stroke="#c4b4a4" strokeWidth="0.8" />
         <line x1="40" y1="200" x2="160" y2="200" stroke="#c4b4a4" strokeWidth="0.8" />
         <ellipse cx="100" cy="177" rx="13" ry="17" fill="#6B3118" opacity="0.85" />
         <path d="M100 161 Q107 169 100 177 Q93 185 100 193" fill="none" stroke="#4A1B0C" strokeWidth="1.6" strokeLinecap="round" />
 
+        {/* 4. Lid — top */}
         <rect x="26" y="58" width="148" height="22" rx="4" fill="url(#cc-lid)" />
         <rect x="34" y="52" width="132" height="10" rx="3" fill="#6B3118" />
         <rect x="72" y="54" width="56" height="5" rx="2.5" fill="#3A1208" opacity="0.8" />
         <rect x="28" y="77" width="144" height="5" rx="2" fill="#5A2410" />
 
-        {showSteam
-          ? [
-              { d: "M78 52 C72 40 84 30 78 18", delay: 0 },
-              { d: "M100 52 C94 38 106 26 100 12", delay: 0.45 },
-              { d: "M122 52 C116 40 128 30 122 18", delay: 0.9 },
-            ].map((steam, index) => (
-              <motion.path
-                key={index}
-                d={steam.d}
-                fill="none"
-                stroke="#C9934A"
-                strokeWidth="2"
-                strokeLinecap="round"
-                initial={{ opacity: 0, y: 0 }}
-                animate={{ opacity: [0, 0.55, 0.2, 0], y: [0, -4, -14, -24] }}
-                transition={{ duration: 2.2, delay: steam.delay, ease: "easeInOut", repeat: Infinity }}
-              />
-            ))
-          : null}
+        {/* 5. Steam */}
+        {showSteam &&
+          [
+            { d: "M78 52 C72 40 84 30 78 18", delay: 0 },
+            { d: "M100 52 C94 38 106 26 100 12", delay: 0.45 },
+            { d: "M122 52 C116 40 128 30 122 18", delay: 0.9 },
+          ].map((steam, index) => (
+            <motion.path
+              key={index}
+              d={steam.d}
+              fill="none"
+              stroke="#C9934A"
+              strokeWidth="2"
+              strokeLinecap="round"
+              initial={{ opacity: 0, y: 0 }}
+              animate={{ opacity: [0, 0.55, 0.2, 0], y: [0, -4, -14, -24] }}
+              transition={{ duration: 2.2, delay: steam.delay, ease: "easeInOut", repeat: Infinity }}
+            />
+          ))}
       </motion.svg>
     </div>
   );
@@ -717,12 +737,17 @@ function EditEntryModal({
             <span className="text-sm text-roast/60">mg</span>
           </div>
 
+          {/* FIX 2: Time input — appearance-none removes the browser's native
+              time-picker chrome that adds intrinsic width on iOS/Android,
+              box-sizing:border-box ensures padding is included in w-full,
+              and -webkit-appearance:none covers older WebKit engines.
+              The result matches the height, padding, and width of all other fields. */}
           <label className="mt-4 block text-sm font-black">Time consumed</label>
           <input
             type="time"
             value={draft.time}
             onChange={(event) => setDraft((current) => ({ ...current, time: event.target.value }))}
-            className="mt-2 block w-full max-w-full min-w-0 rounded-2xl border border-latte bg-foam px-4 py-3 outline-none ring-caramel/30 focus:ring-4"
+            className="mt-2 block w-full max-w-full min-w-0 rounded-2xl border border-latte bg-foam px-4 py-3 outline-none ring-caramel/30 focus:ring-4 appearance-none [box-sizing:border-box] [-webkit-appearance:none]"
           />
         </div>
 
