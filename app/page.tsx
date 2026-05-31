@@ -54,11 +54,7 @@ function getDefaultCaffeine(drinkType: string, size: DrinkSize) {
   return getDrinkOption(drinkType).caffeine[size];
 }
 
-const defaultEntries: CaffeineEntry[] = [
-  { id: "seed-1", drinkType: "Flat white", size: "Large", time: "08:30", caffeineMg: 126 },
-  { id: "seed-2", drinkType: "Instant coffee", size: "Regular", time: "10:15", caffeineMg: 75 },
-  { id: "seed-3", drinkType: "Strong flat white", size: "Large", time: "11:45", caffeineMg: 189 },
-];
+const STORAGE_KEY = "caffeine-crash.entries";
 
 function nowTime() {
   const now = new Date();
@@ -76,12 +72,35 @@ function newEntry(preset = drinkOptions[0], size: DrinkSize = "Regular"): Caffei
 }
 
 export default function Home() {
-  const [entries, setEntries] = useState<CaffeineEntry[]>(defaultEntries);
+  const [entries, setEntries] = useState<CaffeineEntry[]>([]);
   const [editing, setEditing] = useState<CaffeineEntry | null>(null);
   const [mode, setMode] = useState<"input" | "calculating" | "results">("input");
   const [count, setCount] = useState(0);
+  const [hasLoadedEntries, setHasLoadedEntries] = useState(false);
   const results = useMemo(() => getCrashResults(entries), [entries]);
   const totalMg = results?.totalMg ?? 0;
+
+  useEffect(() => {
+    const savedEntries = window.localStorage.getItem(STORAGE_KEY);
+    if (!savedEntries) {
+      setHasLoadedEntries(true);
+      return;
+    }
+
+    try {
+      const parsedEntries = JSON.parse(savedEntries);
+      if (Array.isArray(parsedEntries)) setEntries(parsedEntries);
+    } catch {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } finally {
+      setHasLoadedEntries(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedEntries) return;
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }, [entries, hasLoadedEntries]);
 
   useEffect(() => {
     if (mode !== "calculating") return;
