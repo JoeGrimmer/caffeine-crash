@@ -119,8 +119,8 @@ export default function Home() {
         <section id="curve" className="rounded-[2rem] border border-latte/70 bg-foam/82 p-4 shadow-soft backdrop-blur lg:sticky lg:top-6">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.18em] text-caramel">Caffeine curve</p>
-              <h2 className="mt-1 text-2xl font-black text-espresso">What happens next</h2>
+              <p className="text-sm font-bold uppercase tracking-[0.18em] text-caramel">Caffeine trail</p>
+              <h2 className="mt-1 text-2xl font-black text-espresso">Your day in coffee</h2>
             </div>
             <span className="rounded-full bg-latte/70 px-3 py-1 text-sm font-bold text-roast">~{HALF_LIFE_HOURS}h half-life</span>
           </div>
@@ -150,14 +150,14 @@ function PhoneShell({ children }: { children: React.ReactNode }) {
   return (
     <section className="mx-auto w-full max-w-[430px] rounded-[2rem] border border-latte bg-foam/90 p-4 shadow-soft backdrop-blur">
       {children}
-      <p className="mt-6 text-center text-[11px] text-roast/70">Not medical advice. Just caffeine maths and vibes.</p>
+      <p className="mt-6 text-center text-[11px] text-roast/70">Not medical advice. Just coffee and questionable decisions.</p>
     </section>
   );
 }
 
 function Header({ onBack }: { onBack?: () => void }) {
   return (
-    <header className="mb-8 flex items-center justify-between">
+    <header className="mb-8 flex items-center">
       <div className="flex items-center gap-3">
         {onBack ? (
           <button onClick={onBack} className="grid h-10 w-10 place-items-center rounded-full border border-latte text-xl" aria-label="Back">
@@ -171,9 +171,6 @@ function Header({ onBack }: { onBack?: () => void }) {
           <p className="text-xs text-roast/70">Calculator</p>
         </div>
       </div>
-      <button className="grid h-10 w-10 place-items-center rounded-full border border-latte text-xl" aria-label="Menu">
-        ≡
-      </button>
     </header>
   );
 }
@@ -198,7 +195,7 @@ function InputView({
       <h1 className="text-5xl font-black leading-[0.98] tracking-normal text-espresso">
         When will I <span className="text-caramel">crash?</span>
       </h1>
-      <p className="mt-4 max-w-xs text-base leading-6 text-roast">Add what you’ve had today and I’ll predict your crash.</p>
+      <p className="mt-4 max-w-xs text-base leading-6 text-roast">Log today’s cups and I’ll estimate when your productivity expires.</p>
 
       <div className="mt-8 flex items-center justify-between">
         <h2 className="font-black">Your coffees</h2>
@@ -240,7 +237,7 @@ function InputView({
         disabled={entries.length === 0}
         className="mt-3 w-full rounded-2xl bg-gradient-to-r from-caramel to-[#c77925] px-5 py-4 font-black text-white shadow-button transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
       >
-        ☄ Calculate my crash
+        ☄ Brew my crash forecast
       </button>
     </div>
   );
@@ -266,10 +263,10 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="rounded-3xl border border-latte bg-[#fff1dd] px-5 py-8 text-center">
       <div className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-foam text-5xl shadow-sm">☕</div>
-      <h2 className="mt-5 text-2xl font-black">Nothing here yet</h2>
-      <p className="mx-auto mt-2 max-w-[15rem] text-sm leading-6 text-roast/75">Add your first coffee to see when your crash might hit.</p>
+      <h2 className="mt-5 text-2xl font-black">Fresh cup, blank slate</h2>
+      <p className="mx-auto mt-2 max-w-[15rem] text-sm leading-6 text-roast/75">Add your first cup and we’ll see what the beans have planned.</p>
       <button onClick={onAdd} className="mt-6 rounded-2xl bg-caramel px-6 py-3 font-black text-white shadow-button">
-        + Add your first coffee
+        + Add your first cup
       </button>
     </div>
   );
@@ -278,34 +275,34 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
 function ResultsView({ results, onCurve }: { results: NonNullable<ReturnType<typeof getCrashResults>>; onCurve: () => void }) {
   return (
     <div className="text-center">
-      <h1 className="text-3xl font-black text-espresso">Here’s the damage 😅</h1>
-      <p className="mt-4 text-roast/75">You’ve consumed</p>
+      <h1 className="text-3xl font-black text-espresso">Here’s the roast report 😅</h1>
+      <p className="mt-4 text-roast/75">Today’s running total</p>
       <div className="mt-2 text-7xl font-black tracking-normal text-espresso">{results.totalMg}<span className="text-3xl">mg</span></div>
-      <p className="text-lg">of caffeine</p>
+      <p className="text-lg">of liquid ambition</p>
 
       <div className="mx-auto mt-6 max-w-[260px] rounded-2xl bg-latte px-5 py-4">
         <p className="font-black">{statusIcon(results.status)} {results.status}</p>
-        <p className="mt-1 text-sm text-roast/75">You may regret this.</p>
+        <p className="mt-1 text-sm text-roast/75">Proceed responsibly.</p>
       </div>
 
       <div className="mt-5 grid grid-cols-3 gap-2">
-        <Metric title="Peak time" value={formatTime(results.peakTime)} icon="↗" />
+        <Metric title="Peak buzz" value={formatTime(results.peakTime)} icon="↗" />
         <Metric title="Crash window" value={`${formatTime(results.crashStart)} - ${formatTime(results.crashEnd)}`} icon="☠" />
-        <Metric title="Sleep risk" value={results.sleepRisk} icon="☾" />
+        <Metric title="Sleep mood" value={results.sleepRisk} icon="☾" />
       </div>
 
       <div className="mt-4 rounded-2xl border border-latte bg-foam p-4 text-left">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-black text-roast/70">Regret score</p>
+            <p className="text-sm font-black text-roast/70">Regret meter</p>
             <p className="text-3xl font-black text-espresso">{results.regretScore}/100</p>
           </div>
-          <p className="max-w-[11rem] text-sm leading-5 text-roast/75">Estimated crash incoming. Hydrate like you mean it.</p>
+          <p className="max-w-[11rem] text-sm leading-5 text-roast/75">Estimated crash incoming. Water would like a word.</p>
         </div>
       </div>
 
       <button onClick={onCurve} className="mt-4 w-full rounded-2xl bg-gradient-to-r from-caramel to-[#c77925] px-5 py-4 font-black text-white shadow-button">
-        ↗ View caffeine curve
+        ↗ See the caffeine trail
       </button>
     </div>
   );
@@ -338,18 +335,18 @@ function CurveCard({ results }: { results: NonNullable<ReturnType<typeof getCras
             <YAxis tick={{ fill: "#6f442b", fontSize: 11 }} tickLine={false} axisLine={false} width={38} />
             <Tooltip
               contentStyle={{ border: "1px solid #f4dcc0", borderRadius: 16, background: "#fffaf1", color: "#2a170f" }}
-              formatter={(value) => [`${value}mg`, "Caffeine"]}
+              formatter={(value) => [`${value}mg`, "Coffee power"]}
             />
             <Area type="monotone" dataKey="caffeine" stroke="#8f4618" strokeWidth={3} fill="url(#coffeeFill)" />
           </AreaChart>
         </ResponsiveContainer>
       </div>
       <div className="mt-4 rounded-3xl border border-latte bg-foam p-4">
-        <h3 className="font-black">What’s happening?</h3>
+        <h3 className="font-black">What’s brewing?</h3>
         <ul className="mt-3 space-y-3 text-sm leading-5 text-roast/80">
-          <li><b>Absorption:</b> caffeine typically peaks 30–60 minutes after consumption.</li>
-          <li><b>Peak:</b> your biggest/latest dose points to {formatTime(results.peakTime)}.</li>
-          <li><b>Crash:</b> adenosine rebound is likely around {formatTime(results.crashStart)}.</li>
+          <li><b>Lift-off:</b> caffeine usually hits its stride 30–60 minutes after a cup.</li>
+          <li><b>Peak:</b> your caffeine likely peaks around {formatTime(results.peakTime)}.</li>
+          <li><b>Crash:</b> you may start feeling the crash around {formatTime(results.crashStart)}.</li>
         </ul>
       </div>
     </div>
@@ -360,8 +357,8 @@ function CurveEmpty() {
   return (
     <div className="rounded-3xl border border-dashed border-roast/25 bg-foam p-8 text-center">
       <div className="text-5xl">☕</div>
-      <h2 className="mt-4 text-2xl font-black">Curve pending</h2>
-      <p className="mt-2 text-sm text-roast/70">Add caffeine and calculate to wake this chart up.</p>
+      <h2 className="mt-4 text-2xl font-black">No trail yet</h2>
+      <p className="mt-2 text-sm text-roast/70">Add a cup and we’ll draw the rise, glide, and gentle betrayal.</p>
     </div>
   );
 }
@@ -379,7 +376,7 @@ function CalculationOverlay({ count, total }: { count: number; total: number }) 
     >
       <div className="w-full max-w-[390px] text-center">
         <div className="text-4xl">☕</div>
-        <h2 className="mt-5 text-3xl font-black leading-tight">Calculating your poor decisions...</h2>
+        <h2 className="mt-5 text-3xl font-black leading-tight">Brewing your crash forecast...</h2>
         <div className="relative mx-auto mt-8 h-[390px] w-[180px] rounded-b-[3.2rem] rounded-t-[1.4rem] border-4 border-white/55 bg-white/10 shadow-[inset_0_0_36px_rgba(255,255,255,.16)]">
           <div className="absolute left-1/2 top-[-32px] h-[112%] w-5 -translate-x-1/2 bg-gradient-to-b from-[#d27224]/80 to-[#6a2e12]/70 blur-[1px]" />
           <motion.div
