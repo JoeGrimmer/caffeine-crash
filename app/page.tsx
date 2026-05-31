@@ -515,7 +515,7 @@ function EditEntryModal({
           </button>
         </div>
 
-        <div className="overflow-y-auto overscroll-contain px-4 pb-3 [-webkit-overflow-scrolling:touch]">
+        <div className="overflow-x-hidden overflow-y-auto overscroll-contain px-4 pb-3 [-webkit-overflow-scrolling:touch]">
           <div className="mx-auto mt-3 grid h-16 w-16 place-items-center rounded-full bg-latte/70 text-3xl">☕</div>
 
           <label className="mt-4 block text-sm font-black">Drink type</label>
@@ -530,7 +530,7 @@ function EditEntryModal({
                 caffeineMg: selected.custom ? current.caffeineMg : selected.caffeine[current.size ?? "Regular"],
               }));
             }}
-            className="mt-2 w-full rounded-2xl border border-latte bg-foam px-4 py-3 outline-none ring-caramel/30 focus:ring-4"
+            className="mt-2 block w-full max-w-full min-w-0 rounded-2xl border border-latte bg-foam px-4 py-3 outline-none ring-caramel/30 focus:ring-4"
           >
             <optgroup label="Coffee">
               {drinkOptions
@@ -552,7 +552,7 @@ function EditEntryModal({
           {!isCustomDrink ? (
             <>
               <label className="mt-4 block text-sm font-black">Size</label>
-              <div className="mt-2 grid grid-cols-2 gap-2 rounded-2xl border border-latte bg-[#fff1dd] p-1">
+              <div className="mt-2 grid w-full max-w-full grid-cols-2 gap-2 rounded-2xl border border-latte bg-[#fff1dd] p-1">
                 {sizeOptions.map((size) => (
                   <button
                     key={size}
@@ -581,13 +581,13 @@ function EditEntryModal({
           </div>
 
           <label className="mt-4 block text-sm font-black">Caffeine (mg)</label>
-          <div className="mt-2 flex items-center rounded-2xl border border-latte bg-foam px-4 ring-caramel/30 focus-within:ring-4">
+          <div className="mt-2 flex w-full max-w-full min-w-0 items-center rounded-2xl border border-latte bg-foam px-4 ring-caramel/30 focus-within:ring-4">
             <input
               type="number"
               min="0"
               value={draft.caffeineMg}
               onChange={(event) => setDraft((current) => ({ ...current, caffeineMg: Number(event.target.value) }))}
-              className="w-full bg-transparent py-3 outline-none"
+              className="w-full min-w-0 bg-transparent py-3 outline-none"
             />
             <span className="text-sm text-roast/60">mg</span>
           </div>
@@ -597,11 +597,11 @@ function EditEntryModal({
             type="time"
             value={draft.time}
             onChange={(event) => setDraft((current) => ({ ...current, time: event.target.value }))}
-            className="mt-2 w-full rounded-2xl border border-latte bg-foam px-4 py-3 outline-none ring-caramel/30 focus:ring-4"
+            className="mt-2 block w-full max-w-full min-w-0 rounded-2xl border border-latte bg-foam px-4 py-3 outline-none ring-caramel/30 focus:ring-4"
           />
         </div>
 
-        <div className="shrink-0 bg-foam px-4 pb-4 pt-2">
+        <div className="shrink-0 overflow-x-hidden bg-foam px-4 pb-4 pt-2">
           <button className="w-full rounded-2xl bg-gradient-to-r from-caramel to-[#c77925] px-5 py-3.5 font-black text-white shadow-button">
             Save changes
           </button>
