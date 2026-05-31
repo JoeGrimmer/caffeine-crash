@@ -1,6 +1,7 @@
 export type CaffeineEntry = {
   id: string;
   drinkType: string;
+  size?: "Regular" | "Large";
   time: string;
   caffeineMg: number;
 };

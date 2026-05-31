@@ -18,19 +18,44 @@ import {
   HALF_LIFE_HOURS,
 } from "@/lib/caffeine";
 
-const presets = [
-  { drinkType: "Instant coffee", caffeineMg: 75, short: "Instant" },
-  { drinkType: "Single shot espresso", caffeineMg: 70, short: "Espresso" },
-  { drinkType: "2-shot flat white", caffeineMg: 140, short: "Flat white" },
-  { drinkType: "3-shot large flat white", caffeineMg: 210, short: "Large flat" },
-  { drinkType: "Energy drink", caffeineMg: 160, short: "Energy" },
-  { drinkType: "Custom", caffeineMg: 95, short: "Custom" },
+type DrinkSize = "Regular" | "Large";
+
+type DrinkOption = {
+  drinkType: string;
+  category: "Coffee" | "Other";
+  short: string;
+  caffeine: Record<DrinkSize, number>;
+  custom?: boolean;
+};
+
+const drinkOptions: DrinkOption[] = [
+  { drinkType: "Instant coffee", category: "Coffee", short: "Instant", caffeine: { Regular: 75, Large: 100 } },
+  { drinkType: "Single shot espresso", category: "Coffee", short: "Espresso", caffeine: { Regular: 63, Large: 126 } },
+  { drinkType: "Flat white", category: "Coffee", short: "Flat white", caffeine: { Regular: 63, Large: 126 } },
+  { drinkType: "Strong flat white", category: "Coffee", short: "Strong flat", caffeine: { Regular: 126, Large: 189 } },
+  { drinkType: "Latte", category: "Coffee", short: "Latte", caffeine: { Regular: 63, Large: 126 } },
+  { drinkType: "Cappuccino", category: "Coffee", short: "Capp", caffeine: { Regular: 63, Large: 126 } },
+  { drinkType: "Long black", category: "Coffee", short: "Long black", caffeine: { Regular: 63, Large: 126 } },
+  { drinkType: "Americano", category: "Coffee", short: "Americano", caffeine: { Regular: 63, Large: 126 } },
+  { drinkType: "Mocha", category: "Coffee", short: "Mocha", caffeine: { Regular: 63, Large: 126 } },
+  { drinkType: "Energy drink", category: "Other", short: "Energy", caffeine: { Regular: 80, Large: 160 } },
+  { drinkType: "Custom", category: "Other", short: "Custom", caffeine: { Regular: 95, Large: 95 }, custom: true },
 ];
 
+const sizeOptions: DrinkSize[] = ["Regular", "Large"];
+
+function getDrinkOption(drinkType: string) {
+  return drinkOptions.find((option) => option.drinkType === drinkType) ?? drinkOptions[0];
+}
+
+function getDefaultCaffeine(drinkType: string, size: DrinkSize) {
+  return getDrinkOption(drinkType).caffeine[size];
+}
+
 const defaultEntries: CaffeineEntry[] = [
-  { id: "seed-1", drinkType: "2-shot flat white", time: "08:30", caffeineMg: 140 },
-  { id: "seed-2", drinkType: "Instant coffee", time: "10:15", caffeineMg: 75 },
-  { id: "seed-3", drinkType: "3-shot large flat white", time: "11:45", caffeineMg: 210 },
+  { id: "seed-1", drinkType: "Flat white", size: "Large", time: "08:30", caffeineMg: 126 },
+  { id: "seed-2", drinkType: "Instant coffee", size: "Regular", time: "10:15", caffeineMg: 75 },
+  { id: "seed-3", drinkType: "Strong flat white", size: "Large", time: "11:45", caffeineMg: 189 },
 ];
 
 function nowTime() {
@@ -38,11 +63,12 @@ function nowTime() {
   return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
-function newEntry(preset = presets[0]): CaffeineEntry {
+function newEntry(preset = drinkOptions[0], size: DrinkSize = "Regular"): CaffeineEntry {
   return {
     id: crypto.randomUUID(),
     drinkType: preset.drinkType,
-    caffeineMg: preset.caffeineMg,
+    size,
+    caffeineMg: preset.caffeine[size],
     time: nowTime(),
   };
 }
@@ -75,7 +101,7 @@ export default function Home() {
     if (mode === "results") window.scrollTo({ top: 0, behavior: "smooth" });
   }, [mode]);
 
-  function addPreset(preset = presets[0]) {
+  function addPreset(preset = drinkOptions[0]) {
     const entry = newEntry(preset);
     setEntries((current) => [...current, entry]);
     setEditing(entry);
@@ -107,7 +133,7 @@ export default function Home() {
           ) : (
             <InputView
               entries={entries}
-              onAdd={() => addPreset(presets[0])}
+              onAdd={() => addPreset(drinkOptions[0])}
               onEdit={setEditing}
               onDelete={deleteEntry}
               onPreset={addPreset}
@@ -187,7 +213,7 @@ function InputView({
   onAdd: () => void;
   onEdit: (entry: CaffeineEntry) => void;
   onDelete: (id: string) => void;
-  onPreset: (preset: (typeof presets)[number]) => void;
+  onPreset: (preset: DrinkOption) => void;
   onCalculate: () => void;
 }) {
   return (
@@ -220,14 +246,14 @@ function InputView({
 
       <h2 className="mt-6 font-black">Quick add</h2>
       <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-2">
-        {presets.map((preset) => (
+        {drinkOptions.map((preset) => (
           <button
             key={preset.drinkType}
             onClick={() => onPreset(preset)}
             className="min-w-[88px] rounded-2xl border border-latte bg-[#fff1dd] px-3 py-3 text-center shadow-sm transition active:scale-95"
           >
             <span className="block text-xs font-black leading-tight">{preset.short}</span>
-            <span className="mt-1 block text-xs text-roast/70">{preset.caffeineMg}mg</span>
+            <span className="mt-1 block text-xs text-roast/70">{preset.caffeine.Regular}mg</span>
           </button>
         ))}
       </div>
@@ -249,7 +275,7 @@ function EntryCard({ entry, onEdit, onDelete }: { entry: CaffeineEntry; onEdit: 
       <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-latte/70 text-xl">☕</div>
       <button onClick={onEdit} className="min-w-0 flex-1 text-left">
         <p className="truncate text-sm font-black capitalize">{entry.drinkType}</p>
-        <p className="mt-1 text-xs text-roast/65">{formatEntryTime(entry.time)}</p>
+        <p className="mt-1 text-xs text-roast/65">{entry.size ?? "Regular"} · {formatEntryTime(entry.time)}</p>
       </button>
       <p className="text-sm font-black">{entry.caffeineMg}mg</p>
       <button onClick={onDelete} className="grid h-8 w-8 place-items-center rounded-full text-roast/55" aria-label={`Remove ${entry.drinkType}`}>
@@ -423,6 +449,9 @@ function EditEntryModal({
   onDelete: () => void;
 }) {
   const [draft, setDraft] = useState(entry);
+  const draftSize = draft.size ?? "Regular";
+  const selectedDrink = getDrinkOption(draft.drinkType);
+  const isCustomDrink = selectedDrink.custom === true;
 
   return (
     <motion.div
@@ -436,7 +465,7 @@ function EditEntryModal({
           event.preventDefault();
           onSave({ ...draft, caffeineMg: Math.max(0, Number(draft.caffeineMg) || 0) });
         }}
-        className="w-full max-w-[430px] rounded-[2rem] bg-foam p-5 shadow-soft"
+        className="max-h-[calc(100dvh-24px)] w-full max-w-[430px] overflow-y-auto rounded-[2rem] bg-foam p-5 shadow-soft"
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 40, opacity: 0 }}
@@ -457,19 +486,63 @@ function EditEntryModal({
         <select
           value={draft.drinkType}
           onChange={(event) => {
-            const preset = presets.find((item) => item.drinkType === event.target.value);
+            const selected = getDrinkOption(event.target.value);
             setDraft((current) => ({
               ...current,
               drinkType: event.target.value,
-              caffeineMg: preset ? preset.caffeineMg : current.caffeineMg,
+              size: current.size ?? "Regular",
+              caffeineMg: selected.custom ? current.caffeineMg : selected.caffeine[current.size ?? "Regular"],
             }));
           }}
           className="mt-2 w-full rounded-2xl border border-latte bg-foam px-4 py-4 outline-none ring-caramel/30 focus:ring-4"
         >
-          {presets.map((preset) => (
-            <option key={preset.drinkType}>{preset.drinkType}</option>
-          ))}
+          <optgroup label="Coffee">
+            {drinkOptions
+              .filter((option) => option.category === "Coffee")
+              .map((option) => (
+                <option key={option.drinkType}>{option.drinkType}</option>
+              ))}
+          </optgroup>
+          <optgroup label="Other">
+            {drinkOptions
+              .filter((option) => option.category === "Other")
+              .map((option) => (
+                <option key={option.drinkType}>{option.drinkType}</option>
+              ))}
+          </optgroup>
         </select>
+        <p className="mt-2 text-xs leading-5 text-roast/60">Based on typical Australian café servings</p>
+
+        {!isCustomDrink ? (
+          <>
+            <label className="mt-5 block text-sm font-black">Size</label>
+            <div className="mt-2 grid grid-cols-2 gap-2 rounded-2xl border border-latte bg-[#fff1dd] p-1">
+              {sizeOptions.map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() =>
+                    setDraft((current) => ({
+                      ...current,
+                      size,
+                      caffeineMg: getDefaultCaffeine(current.drinkType, size),
+                    }))
+                  }
+                  className={`rounded-xl px-3 py-3 text-sm font-black transition ${
+                    draftSize === size ? "bg-caramel text-white shadow-sm" : "text-roast/70"
+                  }`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : null}
+
+        <div className="mt-4 rounded-2xl bg-latte/55 px-4 py-3 text-sm text-roast">
+          <span className="font-black">Estimated caffeine:</span>{" "}
+          {isCustomDrink ? `${Math.max(0, Number(draft.caffeineMg) || 0)}mg, because you know your cup best.` : `${draft.caffeineMg}mg`}
+        </div>
 
         <label className="mt-5 block text-sm font-black">Caffeine (mg)</label>
         <div className="mt-2 flex items-center rounded-2xl border border-latte bg-foam px-4 ring-caramel/30 focus-within:ring-4">
