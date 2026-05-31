@@ -122,6 +122,23 @@ export default function Home() {
     if (mode === "results") window.scrollTo({ top: 0, behavior: "smooth" });
   }, [mode]);
 
+  useEffect(() => {
+    if (!editing) return;
+    const scrollY = window.scrollY;
+    const originalBodyStyle = document.body.getAttribute("style") ?? "";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.setAttribute("style", originalBodyStyle);
+      window.scrollTo(0, scrollY);
+    };
+  }, [editing]);
+
   function addPreset(preset = drinkOptions[0]) {
     const entry = newEntry(preset);
     setEntries((current) => [...current, entry]);
@@ -476,7 +493,7 @@ function EditEntryModal({
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 grid place-items-end bg-espresso/40 px-3 pb-3 sm:place-items-center"
+      className="fixed inset-0 z-50 grid touch-none place-items-end overflow-hidden overscroll-none bg-espresso/40 px-3 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-[calc(env(safe-area-inset-top)+12px)] sm:place-items-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -486,7 +503,7 @@ function EditEntryModal({
           event.preventDefault();
           onSave({ ...draft, caffeineMg: Math.max(0, Number(draft.caffeineMg) || 0) });
         }}
-        className="max-h-[calc(100dvh-24px)] w-full max-w-[430px] overflow-y-auto rounded-[2rem] bg-foam p-5 shadow-soft"
+        className="max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-24px)] w-full max-w-[430px] touch-pan-y overflow-y-auto overscroll-contain rounded-[2rem] bg-foam p-5 shadow-soft [-webkit-overflow-scrolling:touch]"
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 40, opacity: 0 }}
