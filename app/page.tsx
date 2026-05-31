@@ -106,9 +106,9 @@ export default function Home() {
     if (mode !== "calculating") return;
     setCount(0);
     const started = Date.now();
-    const anticipationMs = 360;
-    const pourMs = 1900;
-    const settleMs = 360;
+    const anticipationMs = 560;
+    const pourMs = 2850;
+    const settleMs = 520;
     const ticker = window.setInterval(() => {
       const elapsed = Date.now() - started;
       const progress = Math.min(1, Math.max(0, (elapsed - anticipationMs) / pourMs));
@@ -430,6 +430,10 @@ function CurveEmpty() {
 function CalculationOverlay({ count, total }: { count: number; total: number }) {
   const ratio = total === 0 ? 0 : count / Math.max(600, total);
   const fillPercent = Math.min(88, ratio * 100);
+  const cupInteriorTop = 92;
+  const cupInteriorHeight = 286;
+  const liquidHeight = (cupInteriorHeight * fillPercent) / 100;
+  const liquidY = cupInteriorTop + cupInteriorHeight - liquidHeight;
   const label = count >= 450 ? "Send help" : count >= 300 ? "Danger zone" : count >= 150 ? "Wired" : "Mild buzz";
   const isPouring = count > 0 && count < total;
   const isSettling = total > 0 && count >= total;
@@ -445,71 +449,121 @@ function CalculationOverlay({ count, total }: { count: number; total: number }) 
         <div className="text-4xl">☕</div>
         <h2 className="mt-5 text-3xl font-black leading-tight">Brewing your crash forecast...</h2>
         <motion.div
-          className="relative mx-auto mt-8 h-[390px] w-[180px]"
-          animate={isSettling ? { scale: [1, 1.025, 1] } : { scale: 1 }}
-          transition={{ duration: 0.42, ease: "easeOut" }}
+          className="relative mx-auto mt-8 h-[390px] w-[220px]"
+          animate={isSettling ? { scale: [1, 1.018, 1] } : { scale: 1 }}
+          transition={{ duration: 0.58, ease: "easeOut" }}
         >
-          <AnimatePresence>
-            {isPouring ? (
-              <motion.div
-                className="absolute left-1/2 top-[-50px] z-10 h-[126%] w-4 -translate-x-1/2 rounded-full bg-gradient-to-b from-[#e18b3c] via-[#a34f1d] to-[#5b230e] shadow-[0_0_22px_rgba(210,114,36,.45)]"
-                initial={{ opacity: 0, scaleY: 0.08, transformOrigin: "top" }}
-                animate={{
-                  opacity: [0.45, 0.88, 0.68, 0.9],
-                  scaleX: [0.75, 1.05, 0.82, 1],
-                  x: [-2, 2, -1, 1],
-                  scaleY: 1,
-                }}
-                exit={{ opacity: 0, scaleY: 0.2 }}
-                transition={{
-                  opacity: { duration: 0.7, repeat: Infinity, repeatType: "mirror" },
-                  scaleX: { duration: 0.52, repeat: Infinity, repeatType: "mirror" },
-                  x: { duration: 0.65, repeat: Infinity, repeatType: "mirror" },
-                  scaleY: { duration: 0.26, ease: "easeOut" },
-                }}
-              />
-            ) : null}
-          </AnimatePresence>
-
           <AnimatePresence>
             {isSettling ? (
               <div className="absolute left-1/2 top-3 z-20 -translate-x-1/2">
                 {[0, 1, 2].map((index) => (
                   <motion.span
                     key={index}
-                    className="absolute block h-8 w-2 rounded-full bg-white/35 blur-[1px]"
+                    className="absolute block h-9 w-2 rounded-full bg-[#f8dfc0]/35 blur-[1px]"
                     style={{ left: `${index * 18 - 18}px` }}
                     initial={{ opacity: 0, y: 16, scale: 0.7 }}
-                    animate={{ opacity: [0, 0.45, 0], y: -18, scale: 1 }}
+                    animate={{ opacity: [0, 0.5, 0], y: -24, scale: 1.05 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.9, delay: index * 0.12, ease: "easeOut" }}
+                    transition={{ duration: 1.15, delay: index * 0.14, ease: "easeOut" }}
                   />
                 ))}
               </div>
             ) : null}
           </AnimatePresence>
 
-          <div className="absolute inset-0 z-0 rounded-b-[3.4rem] rounded-t-[1.25rem] bg-gradient-to-b from-[#f5d2ad]/20 via-[#c98c5a]/15 to-[#f3dbc9]/30 [clip-path:polygon(8%_0,92%_0,82%_100%,18%_100%)]" />
-          <div className="absolute inset-[8px] z-10 overflow-hidden [clip-path:polygon(7%_0,93%_0,82%_100%,18%_100%)]">
-            <motion.div
-              className="absolute bottom-0 left-0 right-0 overflow-hidden bg-gradient-to-b from-[#d6782b] via-[#874018] to-[#321407]"
-              initial={{ height: 0 }}
-              animate={{ height: `${fillPercent}%` }}
-              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <motion.div
-                className="absolute left-[-6%] top-0 h-7 w-[112%] max-w-none rounded-[50%] bg-[#f1c58c] shadow-[0_0_20px_rgba(255,226,188,.48)]"
-                animate={{ rotate: isPouring ? [-1.5, 1.2, -0.7] : 0, y: isPouring ? [0, 1, 0] : 0 }}
-                transition={{ duration: 0.9, repeat: isPouring ? Infinity : 0, repeatType: "mirror", ease: "easeInOut" }}
+          <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 220 420" role="img" aria-label="Coffee cup filling">
+            <defs>
+              <clipPath id="cupInteriorClip" clipPathUnits="userSpaceOnUse">
+                <path d="M48 92H172L154 366Q152 385 136 394H84Q68 385 66 366Z" />
+              </clipPath>
+              <linearGradient id="svgCupWash" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="#c58657" stopOpacity="0.34" />
+                <stop offset="52%" stopColor="#b86f3f" stopOpacity="0.24" />
+                <stop offset="100%" stopColor="#f2d7c4" stopOpacity="0.28" />
+              </linearGradient>
+              <linearGradient id="svgCoffeeFill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="#c86e24" />
+                <stop offset="42%" stopColor="#7d3718" />
+                <stop offset="100%" stopColor="#241007" />
+              </linearGradient>
+              <linearGradient id="svgCoffeeStream" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="#e09a4b" />
+                <stop offset="55%" stopColor="#9a471b" />
+                <stop offset="100%" stopColor="#4b1d0b" />
+              </linearGradient>
+              <linearGradient id="svgRim" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="#b9764c" />
+                <stop offset="100%" stopColor="#8a4827" />
+              </linearGradient>
+              <linearGradient id="svgPaperHighlight" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#ffffff" stopOpacity="0.04" />
+              </linearGradient>
+            </defs>
+
+            <AnimatePresence>
+              {isPouring ? (
+                <motion.path
+                  d="M110 -24C110 22 108 52 110 94"
+                  stroke="url(#svgCoffeeStream)"
+                  strokeWidth="13"
+                  strokeLinecap="round"
+                  fill="none"
+                  initial={{ opacity: 0, pathLength: 0 }}
+                  animate={{ opacity: [0.5, 0.88, 0.68, 0.86], pathLength: 1, x: [-1.2, 1.2, -0.4] }}
+                  exit={{ opacity: 0, pathLength: 0 }}
+                  transition={{
+                    opacity: { duration: 1.05, repeat: Infinity, repeatType: "mirror" },
+                    x: { duration: 1.05, repeat: Infinity, repeatType: "mirror" },
+                    pathLength: { duration: 0.34, ease: "easeOut" },
+                  }}
+                />
+              ) : null}
+            </AnimatePresence>
+
+            <path d="M34 82H186L160 368Q158 391 138 402H82Q62 391 60 368Z" fill="url(#svgCupWash)" />
+
+            <g clipPath="url(#cupInteriorClip)">
+              <motion.rect
+                x="34"
+                y={liquidY}
+                width="152"
+                height={liquidHeight}
+                fill="url(#svgCoffeeFill)"
+                initial={false}
+                animate={{ y: liquidY, height: liquidHeight }}
+                transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
               />
-              <div className="absolute inset-x-6 top-7 h-2 rounded-full bg-white/18" />
-            </motion.div>
-          </div>
-          <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-b-[3.4rem] rounded-t-[1.25rem] border-[3px] border-[#ffe6cf]/60 shadow-[inset_0_0_34px_rgba(255,229,205,.18)] [clip-path:polygon(8%_0,92%_0,82%_100%,18%_100%)]">
-            <div className="absolute inset-y-0 left-1/4 w-1/2 rounded-full bg-white/13 blur-[1px]" />
-            <div className="absolute inset-x-5 top-[46%] h-16 rounded-2xl bg-[#7e3f21]/16" />
-          </div>
-          <div className="absolute inset-x-[-10px] top-[-7px] z-30 h-9 rounded-full border border-[#ffe6cf]/55 bg-gradient-to-b from-[#c78a5b] to-[#7e3f21] shadow-[0_8px_22px_rgba(0,0,0,.28)]" />
+              <motion.ellipse
+                cx="110"
+                cy={liquidY}
+                rx="72"
+                ry="11"
+                fill="#e4a15a"
+                opacity={fillPercent > 1 ? 1 : 0}
+                initial={false}
+                animate={{ cy: liquidY, rotate: isPouring ? [-1.2, 1, -0.6] : 0, rx: isPouring ? [70, 74, 72] : 72 }}
+                transition={{ duration: 1.35, repeat: isPouring ? Infinity : 0, repeatType: "mirror", ease: "easeInOut" }}
+              />
+              <motion.ellipse
+                cx="110"
+                cy={liquidY + 16}
+                rx="44"
+                ry="4"
+                fill="rgba(255,255,255,0.18)"
+                opacity={fillPercent > 8 ? 1 : 0}
+                initial={false}
+                animate={{ cy: liquidY + 16 }}
+                transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              />
+            </g>
+
+            <path d="M34 82H186L160 368Q158 391 138 402H82Q62 391 60 368Z" fill="none" stroke="rgba(255,230,207,.58)" strokeWidth="6" strokeLinejoin="round" />
+            <path d="M73 92C50 178 58 291 96 372" fill="none" stroke="url(#svgPaperHighlight)" strokeWidth="42" strokeLinecap="round" />
+            <path d="M141 96C155 196 151 294 134 374" fill="none" stroke="rgba(87,42,22,.16)" strokeWidth="24" strokeLinecap="round" />
+            <rect x="16" y="58" width="188" height="48" rx="17" fill="url(#svgRim)" stroke="rgba(255,230,207,.55)" strokeWidth="2" />
+          </svg>
+
           <div className="absolute -right-28 top-8 space-y-10 text-left text-xs font-bold text-white/90">
             <ScaleMark mg="600mg" label="Send help" />
             <ScaleMark mg="400mg" label="Danger zone" />
@@ -520,7 +574,7 @@ function CalculationOverlay({ count, total }: { count: number; total: number }) 
         <motion.p
           className="mt-7 text-6xl font-black"
           animate={isSettling ? { scale: [1, 1.04, 1] } : { scale: 1 }}
-          transition={{ duration: 0.35 }}
+          transition={{ duration: 0.48 }}
         >
           {count}mg
         </motion.p>
