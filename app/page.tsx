@@ -32,7 +32,7 @@ const drinkOptions: DrinkOption[] = [
   { drinkType: "Instant coffee", category: "Coffee", short: "Instant", caffeine: { Regular: 75, Large: 100 } },
   { drinkType: "Single shot espresso", category: "Coffee", short: "Espresso", caffeine: { Regular: 63, Large: 126 } },
   { drinkType: "Flat white", category: "Coffee", short: "Flat white", caffeine: { Regular: 63, Large: 126 } },
-  { drinkType: "Strong flat white", category: "Coffee", short: "Strong flat", caffeine: { Regular: 126, Large: 189 } },
+  { drinkType: "Strong flat white", category: "Coffee", short: "Strong FW", caffeine: { Regular: 126, Large: 189 } },
   { drinkType: "Latte", category: "Coffee", short: "Latte", caffeine: { Regular: 63, Large: 126 } },
   { drinkType: "Cappuccino", category: "Coffee", short: "Capp", caffeine: { Regular: 63, Large: 126 } },
   { drinkType: "Long black", category: "Coffee", short: "Long black", caffeine: { Regular: 63, Large: 126 } },
@@ -42,6 +42,8 @@ const drinkOptions: DrinkOption[] = [
   { drinkType: "Custom", category: "Other", short: "Custom", caffeine: { Regular: 95, Large: 95 }, custom: true },
 ];
 
+const quickAddTypes = new Set(["Instant coffee", "Single shot espresso", "Flat white", "Strong flat white", "Latte", "Cappuccino"]);
+const quickAddOptions = drinkOptions.filter((option) => quickAddTypes.has(option.drinkType));
 const sizeOptions: DrinkSize[] = ["Regular", "Large"];
 
 function getDrinkOption(drinkType: string) {
@@ -246,13 +248,13 @@ function InputView({
 
       <h2 className="mt-6 font-black">Quick add</h2>
       <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-2">
-        {drinkOptions.map((preset) => (
+        {quickAddOptions.map((preset) => (
           <button
             key={preset.drinkType}
             onClick={() => onPreset(preset)}
-            className="min-w-[88px] rounded-2xl border border-latte bg-[#fff1dd] px-3 py-3 text-center shadow-sm transition active:scale-95"
+            className="min-w-[92px] rounded-2xl border border-latte bg-[#fff1dd] px-3 py-2.5 text-center shadow-sm transition active:scale-95"
           >
-            <span className="block text-xs font-black leading-tight">{preset.short}</span>
+            <span className="block whitespace-nowrap text-xs font-black leading-tight">{preset.short}</span>
             <span className="mt-1 block text-xs text-roast/70">{preset.caffeine.Regular}mg</span>
           </button>
         ))}
@@ -263,7 +265,7 @@ function InputView({
         disabled={entries.length === 0}
         className="mt-3 w-full rounded-2xl bg-gradient-to-r from-caramel to-[#c77925] px-5 py-4 font-black text-white shadow-button transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
       >
-        ☄ Brew my crash forecast
+        Brew my crash forecast
       </button>
     </div>
   );
