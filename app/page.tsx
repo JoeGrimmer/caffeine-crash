@@ -261,11 +261,8 @@ function InputView({
       </h1>
       <p className="mt-4 max-w-xs text-base leading-6 text-roast">Log today’s cups and I’ll estimate when your productivity expires.</p>
 
-      <div className="mt-8 flex items-center justify-between">
+      <div className="mt-8">
         <h2 className="font-black">Your coffees</h2>
-        <button onClick={onAdd} className="grid h-11 w-11 place-items-center rounded-full bg-caramel text-2xl text-white shadow-button" aria-label="Add coffee">
-          +
-        </button>
       </div>
 
       <div className="mt-3 space-y-3">
@@ -493,7 +490,7 @@ function EditEntryModal({
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 grid touch-none place-items-end overflow-hidden overscroll-none bg-espresso/40 px-3 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-[calc(env(safe-area-inset-top)+12px)] sm:place-items-center"
+      className="fixed inset-0 z-50 grid touch-none place-items-end overflow-hidden overscroll-none bg-espresso/40 px-2 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-[calc(env(safe-area-inset-top)+8px)] sm:place-items-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -503,12 +500,12 @@ function EditEntryModal({
           event.preventDefault();
           onSave({ ...draft, caffeineMg: Math.max(0, Number(draft.caffeineMg) || 0) });
         }}
-        className="max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-24px)] w-full max-w-[430px] touch-pan-y overflow-y-auto overscroll-contain rounded-[2rem] bg-foam p-5 shadow-soft [-webkit-overflow-scrolling:touch]"
+        className="flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-16px)] w-full max-w-[430px] touch-pan-y flex-col overflow-hidden rounded-[2rem] bg-foam shadow-soft"
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 40, opacity: 0 }}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex shrink-0 items-center justify-between px-4 pt-4">
           <button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center rounded-full border border-latte text-xl" aria-label="Close">
             ‹
           </button>
@@ -518,93 +515,97 @@ function EditEntryModal({
           </button>
         </div>
 
-        <div className="mx-auto mt-6 grid h-24 w-24 place-items-center rounded-full bg-latte/70 text-5xl">☕</div>
+        <div className="overflow-y-auto overscroll-contain px-4 pb-3 [-webkit-overflow-scrolling:touch]">
+          <div className="mx-auto mt-3 grid h-16 w-16 place-items-center rounded-full bg-latte/70 text-3xl">☕</div>
 
-        <label className="mt-7 block text-sm font-black">Drink type</label>
-        <select
-          value={draft.drinkType}
-          onChange={(event) => {
-            const selected = getDrinkOption(event.target.value);
-            setDraft((current) => ({
-              ...current,
-              drinkType: event.target.value,
-              size: current.size ?? "Regular",
-              caffeineMg: selected.custom ? current.caffeineMg : selected.caffeine[current.size ?? "Regular"],
-            }));
-          }}
-          className="mt-2 w-full rounded-2xl border border-latte bg-foam px-4 py-4 outline-none ring-caramel/30 focus:ring-4"
-        >
-          <optgroup label="Coffee">
-            {drinkOptions
-              .filter((option) => option.category === "Coffee")
-              .map((option) => (
-                <option key={option.drinkType}>{option.drinkType}</option>
-              ))}
-          </optgroup>
-          <optgroup label="Other">
-            {drinkOptions
-              .filter((option) => option.category === "Other")
-              .map((option) => (
-                <option key={option.drinkType}>{option.drinkType}</option>
-              ))}
-          </optgroup>
-        </select>
-        <p className="mt-2 text-xs leading-5 text-roast/60">Based on typical Australian café servings</p>
+          <label className="mt-4 block text-sm font-black">Drink type</label>
+          <select
+            value={draft.drinkType}
+            onChange={(event) => {
+              const selected = getDrinkOption(event.target.value);
+              setDraft((current) => ({
+                ...current,
+                drinkType: event.target.value,
+                size: current.size ?? "Regular",
+                caffeineMg: selected.custom ? current.caffeineMg : selected.caffeine[current.size ?? "Regular"],
+              }));
+            }}
+            className="mt-2 w-full rounded-2xl border border-latte bg-foam px-4 py-3 outline-none ring-caramel/30 focus:ring-4"
+          >
+            <optgroup label="Coffee">
+              {drinkOptions
+                .filter((option) => option.category === "Coffee")
+                .map((option) => (
+                  <option key={option.drinkType}>{option.drinkType}</option>
+                ))}
+            </optgroup>
+            <optgroup label="Other">
+              {drinkOptions
+                .filter((option) => option.category === "Other")
+                .map((option) => (
+                  <option key={option.drinkType}>{option.drinkType}</option>
+                ))}
+            </optgroup>
+          </select>
+          <p className="mt-1.5 text-xs leading-5 text-roast/60">Based on typical Australian café servings</p>
 
-        {!isCustomDrink ? (
-          <>
-            <label className="mt-5 block text-sm font-black">Size</label>
-            <div className="mt-2 grid grid-cols-2 gap-2 rounded-2xl border border-latte bg-[#fff1dd] p-1">
-              {sizeOptions.map((size) => (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() =>
-                    setDraft((current) => ({
-                      ...current,
-                      size,
-                      caffeineMg: getDefaultCaffeine(current.drinkType, size),
-                    }))
-                  }
-                  className={`rounded-xl px-3 py-3 text-sm font-black transition ${
-                    draftSize === size ? "bg-caramel text-white shadow-sm" : "text-roast/70"
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </>
-        ) : null}
+          {!isCustomDrink ? (
+            <>
+              <label className="mt-4 block text-sm font-black">Size</label>
+              <div className="mt-2 grid grid-cols-2 gap-2 rounded-2xl border border-latte bg-[#fff1dd] p-1">
+                {sizeOptions.map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() =>
+                      setDraft((current) => ({
+                        ...current,
+                        size,
+                        caffeineMg: getDefaultCaffeine(current.drinkType, size),
+                      }))
+                    }
+                    className={`rounded-xl px-3 py-2.5 text-sm font-black transition ${
+                      draftSize === size ? "bg-caramel text-white shadow-sm" : "text-roast/70"
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : null}
 
-        <div className="mt-4 rounded-2xl bg-latte/55 px-4 py-3 text-sm text-roast">
-          <span className="font-black">Estimated caffeine:</span>{" "}
-          {isCustomDrink ? `${Math.max(0, Number(draft.caffeineMg) || 0)}mg, because you know your cup best.` : `${draft.caffeineMg}mg`}
-        </div>
+          <div className="mt-3 rounded-2xl bg-latte/55 px-4 py-2.5 text-sm text-roast">
+            <span className="font-black">Estimated caffeine:</span>{" "}
+            {isCustomDrink ? `${Math.max(0, Number(draft.caffeineMg) || 0)}mg, because you know your cup best.` : `${draft.caffeineMg}mg`}
+          </div>
 
-        <label className="mt-5 block text-sm font-black">Caffeine (mg)</label>
-        <div className="mt-2 flex items-center rounded-2xl border border-latte bg-foam px-4 ring-caramel/30 focus-within:ring-4">
+          <label className="mt-4 block text-sm font-black">Caffeine (mg)</label>
+          <div className="mt-2 flex items-center rounded-2xl border border-latte bg-foam px-4 ring-caramel/30 focus-within:ring-4">
+            <input
+              type="number"
+              min="0"
+              value={draft.caffeineMg}
+              onChange={(event) => setDraft((current) => ({ ...current, caffeineMg: Number(event.target.value) }))}
+              className="w-full bg-transparent py-3 outline-none"
+            />
+            <span className="text-sm text-roast/60">mg</span>
+          </div>
+
+          <label className="mt-4 block text-sm font-black">Time consumed</label>
           <input
-            type="number"
-            min="0"
-            value={draft.caffeineMg}
-            onChange={(event) => setDraft((current) => ({ ...current, caffeineMg: Number(event.target.value) }))}
-            className="w-full bg-transparent py-4 outline-none"
+            type="time"
+            value={draft.time}
+            onChange={(event) => setDraft((current) => ({ ...current, time: event.target.value }))}
+            className="mt-2 w-full rounded-2xl border border-latte bg-foam px-4 py-3 outline-none ring-caramel/30 focus:ring-4"
           />
-          <span className="text-sm text-roast/60">mg</span>
         </div>
 
-        <label className="mt-5 block text-sm font-black">Time consumed</label>
-        <input
-          type="time"
-          value={draft.time}
-          onChange={(event) => setDraft((current) => ({ ...current, time: event.target.value }))}
-          className="mt-2 w-full rounded-2xl border border-latte bg-foam px-4 py-4 outline-none ring-caramel/30 focus:ring-4"
-        />
-
-        <button className="mt-8 w-full rounded-2xl bg-gradient-to-r from-caramel to-[#c77925] px-5 py-4 font-black text-white shadow-button">
-          Save changes
-        </button>
+        <div className="shrink-0 bg-foam px-4 pb-4 pt-2">
+          <button className="w-full rounded-2xl bg-gradient-to-r from-caramel to-[#c77925] px-5 py-3.5 font-black text-white shadow-button">
+            Save changes
+          </button>
+        </div>
       </motion.form>
     </motion.div>
   );
