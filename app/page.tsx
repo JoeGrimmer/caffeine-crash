@@ -189,7 +189,10 @@ export default function Home() {
         <section id="curve" className="rounded-[2rem] border border-latte/70 bg-foam/82 p-4 shadow-soft backdrop-blur">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.18em] text-caramel">Caffeine trail</p>
+              <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-caramel">
+                <img src="/coffee-beans.png" alt="" className="h-5 w-5 object-contain" />
+                Caffeine trail
+              </p>
               <h2 className="mt-1 text-2xl font-black text-espresso">Your day in coffee</h2>
             </div>
             <span className="rounded-full bg-latte/70 px-3 py-1 text-sm font-bold text-roast">~{HALF_LIFE_HOURS}h half-life</span>
@@ -234,7 +237,9 @@ function Header({ onBack }: { onBack?: () => void }) {
             ‹
           </button>
         ) : (
-          <div className="grid h-10 w-10 place-items-center rounded-full bg-latte text-xl shadow-sm">☕</div>
+          <div className="grid h-10 w-10 place-items-center rounded-full bg-latte shadow-sm">
+            <img src="/coffee-cup.png" alt="" className="h-7 w-7 object-contain" />
+          </div>
         )}
         <div>
           <p className="text-base font-black leading-tight">Caffeine Crash</p>
@@ -313,7 +318,9 @@ function InputView({
 function EntryCard({ entry, onEdit, onDelete }: { entry: CaffeineEntry; onEdit: () => void; onDelete: () => void }) {
   return (
     <article className="flex items-center gap-3 rounded-2xl border border-latte bg-foam px-4 py-3 shadow-sm">
-      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-latte/70 text-xl">☕</div>
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-latte/70">
+        <img src="/coffee-cup.png" alt="" className="h-7 w-7 object-contain" />
+      </div>
       <button onClick={onEdit} className="min-w-0 flex-1 text-left">
         <p className="truncate text-sm font-black capitalize">{entry.drinkType}</p>
         <p className="mt-1 text-xs text-roast/65">{entry.size ?? "Regular"} · {formatEntryTime(entry.time)}</p>
@@ -329,7 +336,9 @@ function EntryCard({ entry, onEdit, onDelete }: { entry: CaffeineEntry; onEdit: 
 function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="rounded-3xl border border-latte bg-[#fff1dd] px-5 py-8 text-center">
-      <div className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-foam text-5xl shadow-sm">☕</div>
+      <div className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-foam shadow-sm">
+        <img src="/coffee-mug.png" alt="" className="h-16 w-16 object-contain" />
+      </div>
       <h2 className="mt-5 text-2xl font-black">Fresh cup, blank slate</h2>
       <p className="mx-auto mt-2 max-w-[15rem] text-sm leading-6 text-roast/75">Add your first cup and we’ll see what the beans have planned.</p>
       <button onClick={onAdd} className="mt-6 rounded-2xl bg-caramel px-6 py-3 font-black text-white shadow-button">
@@ -423,7 +432,7 @@ function CurveCard({ results }: { results: NonNullable<ReturnType<typeof getCras
 function CurveEmpty() {
   return (
     <div className="rounded-3xl border border-dashed border-roast/25 bg-foam p-8 text-center">
-      <div className="text-5xl">☕</div>
+      <img src="/coffee-mug.png" alt="" className="mx-auto h-20 w-20 object-contain" />
       <h2 className="mt-4 text-2xl font-black">No trail yet</h2>
       <p className="mt-2 text-sm text-roast/70">Add a cup and we’ll draw the rise, glide, and gentle betrayal.</p>
     </div>
@@ -630,7 +639,9 @@ function EditEntryModal({
         </div>
 
         <div className="overflow-x-hidden overflow-y-auto overscroll-contain px-4 pb-3 [-webkit-overflow-scrolling:touch]">
-          <div className="mx-auto mt-3 grid h-16 w-16 place-items-center rounded-full bg-latte/70 text-3xl">☕</div>
+          <div className="mx-auto mt-3 grid h-16 w-16 place-items-center rounded-full bg-latte/70">
+            <img src="/coffee-cup.png" alt="" className="h-11 w-11 object-contain" />
+          </div>
 
           <label className="mt-4 block text-sm font-black">Drink type</label>
           <select
@@ -736,5 +747,5 @@ function statusIcon(status: string) {
   if (status === "Send help") return "🚨";
   if (status === "Danger zone") return "☠";
   if (status === "Wired") return "⚡";
-  return "☕";
+  return "•";
 }
