@@ -106,13 +106,16 @@ export default function Home() {
     if (mode !== "calculating") return;
     setCount(0);
     const started = Date.now();
-    const duration = 2300;
+    const anticipationMs = 360;
+    const pourMs = 1900;
+    const settleMs = 360;
     const ticker = window.setInterval(() => {
-      const progress = Math.min(1, (Date.now() - started) / duration);
+      const elapsed = Date.now() - started;
+      const progress = Math.min(1, Math.max(0, (elapsed - anticipationMs) / pourMs));
       setCount(Math.round(totalMg * easeOut(progress)));
       if (progress === 1) {
         window.clearInterval(ticker);
-        window.setTimeout(() => setMode("results"), 350);
+        window.setTimeout(() => setMode("results"), settleMs);
       }
     }, 35);
     return () => window.clearInterval(ticker);
@@ -426,11 +429,14 @@ function CurveEmpty() {
 
 function CalculationOverlay({ count, total }: { count: number; total: number }) {
   const ratio = total === 0 ? 0 : count / Math.max(600, total);
+  const fillPercent = Math.min(88, ratio * 100);
   const label = count >= 450 ? "Send help" : count >= 300 ? "Danger zone" : count >= 150 ? "Wired" : "Mild buzz";
+  const isPouring = count > 0 && count < total;
+  const isSettling = total > 0 && count >= total;
 
   return (
     <motion.div
-      className="fixed inset-0 z-40 grid place-items-center bg-[radial-gradient(circle_at_top,#6d3518,#24120b_66%)] px-5 text-white"
+      className="fixed inset-0 z-40 grid place-items-center overflow-hidden bg-[radial-gradient(circle_at_top,#70401e,#24120b_68%)] px-5 text-white"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -438,25 +444,86 @@ function CalculationOverlay({ count, total }: { count: number; total: number }) 
       <div className="w-full max-w-[390px] text-center">
         <div className="text-4xl">☕</div>
         <h2 className="mt-5 text-3xl font-black leading-tight">Brewing your crash forecast...</h2>
-        <div className="relative mx-auto mt-8 h-[390px] w-[180px] rounded-b-[3.2rem] rounded-t-[1.4rem] border-4 border-white/55 bg-white/10 shadow-[inset_0_0_36px_rgba(255,255,255,.16)]">
-          <div className="absolute left-1/2 top-[-32px] h-[112%] w-5 -translate-x-1/2 bg-gradient-to-b from-[#d27224]/80 to-[#6a2e12]/70 blur-[1px]" />
-          <motion.div
-            className="absolute bottom-0 left-0 right-0 overflow-hidden rounded-b-[2.8rem] bg-gradient-to-b from-[#d27224] via-[#8f4618] to-[#3a180b]"
-            initial={{ height: 0 }}
-            animate={{ height: `${Math.min(88, Math.max(10, ratio * 100))}%` }}
-            transition={{ duration: 0.35 }}
-          >
-            <div className="h-6 bg-[#ffe2bc]/85 shadow-[0_0_18px_rgba(255,226,188,.8)]" />
-            <div className="absolute inset-x-5 top-9 h-3 rounded-full bg-white/20" />
-          </motion.div>
+        <motion.div
+          className="relative mx-auto mt-8 h-[390px] w-[180px]"
+          animate={isSettling ? { scale: [1, 1.025, 1] } : { scale: 1 }}
+          transition={{ duration: 0.42, ease: "easeOut" }}
+        >
+          <AnimatePresence>
+            {isPouring ? (
+              <motion.div
+                className="absolute left-1/2 top-[-50px] z-10 h-[126%] w-4 -translate-x-1/2 rounded-full bg-gradient-to-b from-[#e18b3c] via-[#a34f1d] to-[#5b230e] shadow-[0_0_22px_rgba(210,114,36,.45)]"
+                initial={{ opacity: 0, scaleY: 0.08, transformOrigin: "top" }}
+                animate={{
+                  opacity: [0.45, 0.88, 0.68, 0.9],
+                  scaleX: [0.75, 1.05, 0.82, 1],
+                  x: [-2, 2, -1, 1],
+                  scaleY: 1,
+                }}
+                exit={{ opacity: 0, scaleY: 0.2 }}
+                transition={{
+                  opacity: { duration: 0.7, repeat: Infinity, repeatType: "mirror" },
+                  scaleX: { duration: 0.52, repeat: Infinity, repeatType: "mirror" },
+                  x: { duration: 0.65, repeat: Infinity, repeatType: "mirror" },
+                  scaleY: { duration: 0.26, ease: "easeOut" },
+                }}
+              />
+            ) : null}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {isSettling ? (
+              <div className="absolute left-1/2 top-3 z-20 -translate-x-1/2">
+                {[0, 1, 2].map((index) => (
+                  <motion.span
+                    key={index}
+                    className="absolute block h-8 w-2 rounded-full bg-white/35 blur-[1px]"
+                    style={{ left: `${index * 18 - 18}px` }}
+                    initial={{ opacity: 0, y: 16, scale: 0.7 }}
+                    animate={{ opacity: [0, 0.45, 0], y: -18, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.9, delay: index * 0.12, ease: "easeOut" }}
+                  />
+                ))}
+              </div>
+            ) : null}
+          </AnimatePresence>
+
+          <div className="absolute inset-0 z-0 rounded-b-[3.4rem] rounded-t-[1.25rem] bg-gradient-to-b from-[#f5d2ad]/20 via-[#c98c5a]/15 to-[#f3dbc9]/30 [clip-path:polygon(8%_0,92%_0,82%_100%,18%_100%)]" />
+          <div className="absolute inset-[8px] z-10 overflow-hidden [clip-path:polygon(7%_0,93%_0,82%_100%,18%_100%)]">
+            <motion.div
+              className="absolute bottom-0 left-0 right-0 overflow-hidden bg-gradient-to-b from-[#d6782b] via-[#874018] to-[#321407]"
+              initial={{ height: 0 }}
+              animate={{ height: `${fillPercent}%` }}
+              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <motion.div
+                className="absolute left-[-6%] top-0 h-7 w-[112%] max-w-none rounded-[50%] bg-[#f1c58c] shadow-[0_0_20px_rgba(255,226,188,.48)]"
+                animate={{ rotate: isPouring ? [-1.5, 1.2, -0.7] : 0, y: isPouring ? [0, 1, 0] : 0 }}
+                transition={{ duration: 0.9, repeat: isPouring ? Infinity : 0, repeatType: "mirror", ease: "easeInOut" }}
+              />
+              <div className="absolute inset-x-6 top-7 h-2 rounded-full bg-white/18" />
+            </motion.div>
+          </div>
+          <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-b-[3.4rem] rounded-t-[1.25rem] border-[3px] border-[#ffe6cf]/60 shadow-[inset_0_0_34px_rgba(255,229,205,.18)] [clip-path:polygon(8%_0,92%_0,82%_100%,18%_100%)]">
+            <div className="absolute inset-y-0 left-1/4 w-1/2 rounded-full bg-white/13 blur-[1px]" />
+            <div className="absolute inset-x-5 top-[46%] h-16 rounded-2xl bg-[#7e3f21]/16" />
+          </div>
+          <div className="absolute inset-x-[-10px] top-[-7px] z-30 h-9 rounded-full border border-[#ffe6cf]/55 bg-gradient-to-b from-[#c78a5b] to-[#7e3f21] shadow-[0_8px_22px_rgba(0,0,0,.28)]" />
           <div className="absolute -right-28 top-8 space-y-10 text-left text-xs font-bold text-white/90">
             <ScaleMark mg="600mg" label="Send help" />
             <ScaleMark mg="400mg" label="Danger zone" />
             <ScaleMark mg="200mg" label="Wired" />
             <ScaleMark mg="0mg" label="Mild buzz" />
           </div>
-        </div>
-        <p className="mt-7 text-6xl font-black">{count}mg</p>
+        </motion.div>
+        <motion.p
+          className="mt-7 text-6xl font-black"
+          animate={isSettling ? { scale: [1, 1.04, 1] } : { scale: 1 }}
+          transition={{ duration: 0.35 }}
+        >
+          {count}mg
+        </motion.p>
         <p className="mt-1 text-xl">{label}</p>
       </div>
     </motion.div>
