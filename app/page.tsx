@@ -163,7 +163,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen min-h-dvh overflow-x-hidden bg-[image:var(--page-background)] px-4 pb-[calc(env(safe-area-inset-bottom)+24px)] pt-5 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 lg:grid lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
+      <div className="mx-auto flex w-full max-w-[560px] flex-col gap-5">
         <PhoneShell>
           <Header onBack={mode === "results" ? () => setMode("input") : undefined} />
           {mode === "results" && results ? (
@@ -180,7 +180,7 @@ export default function Home() {
           )}
         </PhoneShell>
 
-        <section id="curve" className="rounded-[2rem] border border-latte/70 bg-foam/82 p-4 shadow-soft backdrop-blur lg:sticky lg:top-6">
+        <section id="curve" className="rounded-[2rem] border border-latte/70 bg-foam/82 p-4 shadow-soft backdrop-blur">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.18em] text-caramel">Caffeine trail</p>
@@ -212,7 +212,7 @@ export default function Home() {
 
 function PhoneShell({ children }: { children: React.ReactNode }) {
   return (
-    <section className="mx-auto w-full max-w-[430px] rounded-[2rem] border border-latte bg-foam/90 p-4 shadow-soft backdrop-blur">
+    <section className="mx-auto w-full max-w-[520px] rounded-[2rem] border border-latte bg-foam/90 p-4 shadow-soft backdrop-blur">
       {children}
       <p className="mt-6 text-center text-[11px] text-roast/70">Not medical advice. Just coffee and questionable decisions.</p>
     </section>
