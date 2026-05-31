@@ -76,6 +76,7 @@ export default function Home() {
   const [editing, setEditing] = useState<CaffeineEntry | null>(null);
   const [mode, setMode] = useState<"input" | "calculating" | "results">("input");
   const [count, setCount] = useState(0);
+  const [calculationProgress, setCalculationProgress] = useState(0);
   const [hasLoadedEntries, setHasLoadedEntries] = useState(false);
   const results = useMemo(() => getCrashResults(entries), [entries]);
   const totalMg = results?.totalMg ?? 0;
@@ -105,14 +106,16 @@ export default function Home() {
   useEffect(() => {
     if (mode !== "calculating") return;
     setCount(0);
+    setCalculationProgress(0);
     const started = Date.now();
-    const anticipationMs = 560;
-    const pourMs = 2850;
+    const anticipationMs = 320;
+    const pourMs = 3500;
     const settleMs = 520;
     const ticker = window.setInterval(() => {
       const elapsed = Date.now() - started;
       const progress = Math.min(1, Math.max(0, (elapsed - anticipationMs) / pourMs));
-      setCount(Math.round(totalMg * easeOut(progress)));
+      setCalculationProgress(progress);
+      setCount(Math.round(totalMg * progress));
       if (progress === 1) {
         window.clearInterval(ticker);
         window.setTimeout(() => setMode("results"), settleMs);
@@ -196,7 +199,7 @@ export default function Home() {
       </div>
 
       <AnimatePresence>
-        {mode === "calculating" && results ? <CalculationOverlay count={count} total={totalMg} /> : null}
+        {mode === "calculating" && results ? <CalculationOverlay count={count} progress={calculationProgress} total={totalMg} /> : null}
       </AnimatePresence>
 
       <AnimatePresence>
@@ -339,7 +342,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
 function ResultsView({ results, onCurve }: { results: NonNullable<ReturnType<typeof getCrashResults>>; onCurve: () => void }) {
   return (
     <div className="text-center">
-      <h1 className="text-3xl font-black text-espresso">Here’s the roast report 😅</h1>
+      <h1 className="text-3xl font-black text-espresso">Here’s your caffeine forecast</h1>
       <p className="mt-4 text-roast/75">Today’s running total</p>
       <div className="mt-2 text-7xl font-black tracking-normal text-espresso">{results.totalMg}<span className="text-3xl">mg</span></div>
       <p className="text-lg">of liquid ambition</p>
@@ -427,16 +430,9 @@ function CurveEmpty() {
   );
 }
 
-function CalculationOverlay({ count, total }: { count: number; total: number }) {
-  const ratio = total === 0 ? 0 : count / Math.max(600, total);
-  const fillPercent = Math.min(88, ratio * 100);
-  const cupInteriorTop = 92;
-  const cupInteriorHeight = 286;
-  const liquidHeight = (cupInteriorHeight * fillPercent) / 100;
-  const liquidY = cupInteriorTop + cupInteriorHeight - liquidHeight;
-  const label = count >= 450 ? "Send help" : count >= 300 ? "Danger zone" : count >= 150 ? "Wired" : "Mild buzz";
-  const isPouring = count > 0 && count < total;
-  const isSettling = total > 0 && count >= total;
+function CalculationOverlay({ count, progress, total }: { count: number; progress: number; total: number }) {
+  const fillPercent = Math.min(100, progress * 100);
+  const isSettling = total > 0 && progress >= 1;
 
   return (
     <motion.div
@@ -446,149 +442,146 @@ function CalculationOverlay({ count, total }: { count: number; total: number }) 
       exit={{ opacity: 0 }}
     >
       <div className="w-full max-w-[390px] text-center">
-        <div className="text-4xl">☕</div>
-        <h2 className="mt-5 text-3xl font-black leading-tight">Brewing your crash forecast...</h2>
-        <motion.div
-          className="relative mx-auto mt-8 h-[390px] w-[220px]"
-          animate={isSettling ? { scale: [1, 1.018, 1] } : { scale: 1 }}
-          transition={{ duration: 0.58, ease: "easeOut" }}
-        >
-          <AnimatePresence>
-            {isSettling ? (
-              <div className="absolute left-1/2 top-3 z-20 -translate-x-1/2">
-                {[0, 1, 2].map((index) => (
-                  <motion.span
-                    key={index}
-                    className="absolute block h-9 w-2 rounded-full bg-[#f8dfc0]/35 blur-[1px]"
-                    style={{ left: `${index * 18 - 18}px` }}
-                    initial={{ opacity: 0, y: 16, scale: 0.7 }}
-                    animate={{ opacity: [0, 0.5, 0], y: -24, scale: 1.05 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 1.15, delay: index * 0.14, ease: "easeOut" }}
-                  />
-                ))}
-              </div>
-            ) : null}
-          </AnimatePresence>
-
-          <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 220 420" role="img" aria-label="Coffee cup filling">
-            <defs>
-              <clipPath id="cupInteriorClip" clipPathUnits="userSpaceOnUse">
-                <path d="M48 92H172L154 366Q152 385 136 394H84Q68 385 66 366Z" />
-              </clipPath>
-              <linearGradient id="svgCupWash" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="#c58657" stopOpacity="0.34" />
-                <stop offset="52%" stopColor="#b86f3f" stopOpacity="0.24" />
-                <stop offset="100%" stopColor="#f2d7c4" stopOpacity="0.28" />
-              </linearGradient>
-              <linearGradient id="svgCoffeeFill" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="#c86e24" />
-                <stop offset="42%" stopColor="#7d3718" />
-                <stop offset="100%" stopColor="#241007" />
-              </linearGradient>
-              <linearGradient id="svgCoffeeStream" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="#e09a4b" />
-                <stop offset="55%" stopColor="#9a471b" />
-                <stop offset="100%" stopColor="#4b1d0b" />
-              </linearGradient>
-              <linearGradient id="svgRim" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="#b9764c" />
-                <stop offset="100%" stopColor="#8a4827" />
-              </linearGradient>
-              <linearGradient id="svgPaperHighlight" x1="0" x2="1" y1="0" y2="1">
-                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.2" />
-                <stop offset="100%" stopColor="#ffffff" stopOpacity="0.04" />
-              </linearGradient>
-            </defs>
-
-            <AnimatePresence>
-              {isPouring ? (
-                <motion.path
-                  d="M110 -24C110 22 108 52 110 94"
-                  stroke="url(#svgCoffeeStream)"
-                  strokeWidth="13"
-                  strokeLinecap="round"
-                  fill="none"
-                  initial={{ opacity: 0, pathLength: 0 }}
-                  animate={{ opacity: [0.5, 0.88, 0.68, 0.86], pathLength: 1, x: [-1.2, 1.2, -0.4] }}
-                  exit={{ opacity: 0, pathLength: 0 }}
-                  transition={{
-                    opacity: { duration: 1.05, repeat: Infinity, repeatType: "mirror" },
-                    x: { duration: 1.05, repeat: Infinity, repeatType: "mirror" },
-                    pathLength: { duration: 0.34, ease: "easeOut" },
-                  }}
-                />
-              ) : null}
-            </AnimatePresence>
-
-            <path d="M34 82H186L160 368Q158 391 138 402H82Q62 391 60 368Z" fill="url(#svgCupWash)" />
-
-            <g clipPath="url(#cupInteriorClip)">
-              <motion.rect
-                x="34"
-                y={liquidY}
-                width="152"
-                height={liquidHeight}
-                fill="url(#svgCoffeeFill)"
-                initial={false}
-                animate={{ y: liquidY, height: liquidHeight }}
-                transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-              />
-              <motion.ellipse
-                cx="110"
-                cy={liquidY}
-                rx="72"
-                ry="11"
-                fill="#e4a15a"
-                opacity={fillPercent > 1 ? 1 : 0}
-                initial={false}
-                animate={{ cy: liquidY, rotate: isPouring ? [-1.2, 1, -0.6] : 0, rx: isPouring ? [70, 74, 72] : 72 }}
-                transition={{ duration: 1.35, repeat: isPouring ? Infinity : 0, repeatType: "mirror", ease: "easeInOut" }}
-              />
-              <motion.ellipse
-                cx="110"
-                cy={liquidY + 16}
-                rx="44"
-                ry="4"
-                fill="rgba(255,255,255,0.18)"
-                opacity={fillPercent > 8 ? 1 : 0}
-                initial={false}
-                animate={{ cy: liquidY + 16 }}
-                transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-              />
-            </g>
-
-            <path d="M34 82H186L160 368Q158 391 138 402H82Q62 391 60 368Z" fill="none" stroke="rgba(255,230,207,.58)" strokeWidth="6" strokeLinejoin="round" />
-            <path d="M73 92C50 178 58 291 96 372" fill="none" stroke="url(#svgPaperHighlight)" strokeWidth="42" strokeLinecap="round" />
-            <path d="M141 96C155 196 151 294 134 374" fill="none" stroke="rgba(87,42,22,.16)" strokeWidth="24" strokeLinecap="round" />
-            <rect x="16" y="58" width="188" height="48" rx="17" fill="url(#svgRim)" stroke="rgba(255,230,207,.55)" strokeWidth="2" />
-          </svg>
-
-          <div className="absolute -right-28 top-8 space-y-10 text-left text-xs font-bold text-white/90">
-            <ScaleMark mg="600mg" label="Send help" />
-            <ScaleMark mg="400mg" label="Danger zone" />
-            <ScaleMark mg="200mg" label="Wired" />
-            <ScaleMark mg="0mg" label="Mild buzz" />
-          </div>
-        </motion.div>
+        <h2 className="mb-6 text-3xl font-black leading-tight">Brewing your crash forecast...</h2>
+        <CaffeineCupAnimation fillPercent={fillPercent} isComplete={isSettling} size={236} />
         <motion.p
-          className="mt-7 text-6xl font-black"
+          className="mt-3 text-6xl font-black"
           animate={isSettling ? { scale: [1, 1.04, 1] } : { scale: 1 }}
           transition={{ duration: 0.48 }}
         >
           {count}mg
         </motion.p>
-        <p className="mt-1 text-xl">{label}</p>
+        <p className="mt-2 text-xs font-black uppercase tracking-[0.18em] text-[#c9934a]">CAFFEINE LOADED</p>
       </div>
     </motion.div>
   );
 }
 
-function ScaleMark({ mg, label }: { mg: string; label: string }) {
+function CaffeineCupAnimation({
+  fillPercent,
+  isComplete,
+  size = 236,
+}: {
+  fillPercent: number;
+  isComplete: boolean;
+  size?: number;
+}) {
+  const topY = 80;
+  const bottomY = 256;
+  const interiorHeight = bottomY - topY;
+  const fillHeight = (fillPercent / 100) * interiorHeight;
+  const liquidY = bottomY - fillHeight;
+  const foamY = liquidY - 9;
+  const showFoam = fillPercent > 4;
+  const showSteam = fillPercent > 68 || isComplete;
+
   return (
-    <div className="flex items-center gap-2">
-      <span className="h-px w-5 bg-white/45" />
-      <span><b>{mg}</b><br />{label}</span>
+    <div className="mx-auto flex flex-col items-center">
+      <motion.svg
+        width={size}
+        height={290 * (size / 200)}
+        viewBox="0 0 200 290"
+        xmlns="http://www.w3.org/2000/svg"
+        className="overflow-visible"
+        role="img"
+        aria-label="Coffee cup filling"
+        animate={isComplete ? { scale: [1, 1.025, 1] } : { scale: 1 }}
+        transition={{ duration: 0.48, ease: "easeOut" }}
+      >
+        <defs>
+          <linearGradient id="cc-liq" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#2C0F04" />
+            <stop offset="40%" stopColor="#4A1C08" />
+            <stop offset="100%" stopColor="#2C0F04" />
+          </linearGradient>
+          <linearGradient id="cc-foam" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#C9934A" />
+            <stop offset="100%" stopColor="#9B6225" />
+          </linearGradient>
+          <linearGradient id="cc-body" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#7B3A1E" />
+            <stop offset="30%" stopColor="#A8522A" />
+            <stop offset="55%" stopColor="#C1693A" />
+            <stop offset="80%" stopColor="#A8522A" />
+            <stop offset="100%" stopColor="#7B3A1E" />
+          </linearGradient>
+          <linearGradient id="cc-sleeve" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#e0d6cc" />
+            <stop offset="50%" stopColor="#f7f3ef" />
+            <stop offset="100%" stopColor="#e0d6cc" />
+          </linearGradient>
+          <linearGradient id="cc-lid" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#5A2410" />
+            <stop offset="40%" stopColor="#7B3A1E" />
+            <stop offset="100%" stopColor="#5A2410" />
+          </linearGradient>
+          <clipPath id="cc-interior" clipPathUnits="userSpaceOnUse">
+            <polygon points="38,80 162,80 150,256 50,256" />
+          </clipPath>
+        </defs>
+
+        <polygon points="32,78 168,78 156,260 44,260" fill="url(#cc-body)" />
+        <polygon points="46,84 60,84 52,254 40,254" fill="white" opacity="0.06" />
+        <ellipse cx="100" cy="260" rx="56" ry="5" fill="#4A1B0C" opacity="0.5" />
+
+        <g clipPath="url(#cc-interior)">
+          <motion.rect
+            x="36"
+            y={liquidY}
+            width="128"
+            height={fillHeight}
+            fill="url(#cc-liq)"
+            initial={false}
+            animate={{ y: liquidY, height: fillHeight }}
+            transition={{ duration: 0 }}
+          />
+
+          {showFoam ? (
+            <motion.rect
+              x="36"
+              y={Math.max(foamY, topY)}
+              width="128"
+              height="9"
+              fill="url(#cc-foam)"
+              opacity="0.92"
+              initial={false}
+              animate={{ y: Math.max(foamY, topY) }}
+              transition={{ duration: 0 }}
+            />
+          ) : null}
+        </g>
+
+        <polygon points="36,155 164,155 160,200 40,200" fill="url(#cc-sleeve)" />
+        <line x1="36" y1="155" x2="164" y2="155" stroke="#c4b4a4" strokeWidth="0.8" />
+        <line x1="40" y1="200" x2="160" y2="200" stroke="#c4b4a4" strokeWidth="0.8" />
+        <ellipse cx="100" cy="177" rx="13" ry="17" fill="#6B3118" opacity="0.85" />
+        <path d="M100 161 Q107 169 100 177 Q93 185 100 193" fill="none" stroke="#4A1B0C" strokeWidth="1.6" strokeLinecap="round" />
+
+        <rect x="26" y="58" width="148" height="22" rx="4" fill="url(#cc-lid)" />
+        <rect x="34" y="52" width="132" height="10" rx="3" fill="#6B3118" />
+        <rect x="72" y="54" width="56" height="5" rx="2.5" fill="#3A1208" opacity="0.8" />
+        <rect x="28" y="77" width="144" height="5" rx="2" fill="#5A2410" />
+
+        {showSteam
+          ? [
+              { d: "M78 52 C72 40 84 30 78 18", delay: 0 },
+              { d: "M100 52 C94 38 106 26 100 12", delay: 0.45 },
+              { d: "M122 52 C116 40 128 30 122 18", delay: 0.9 },
+            ].map((steam, index) => (
+              <motion.path
+                key={index}
+                d={steam.d}
+                fill="none"
+                stroke="#C9934A"
+                strokeWidth="2"
+                strokeLinecap="round"
+                initial={{ opacity: 0, y: 0 }}
+                animate={{ opacity: [0, 0.55, 0.2, 0], y: [0, -4, -14, -24] }}
+                transition={{ duration: 2.2, delay: steam.delay, ease: "easeInOut", repeat: Infinity }}
+              />
+            ))
+          : null}
+      </motion.svg>
     </div>
   );
 }
@@ -744,8 +737,4 @@ function statusIcon(status: string) {
   if (status === "Danger zone") return "☠";
   if (status === "Wired") return "⚡";
   return "☕";
-}
-
-function easeOut(value: number) {
-  return 1 - Math.pow(1 - value, 3);
 }
