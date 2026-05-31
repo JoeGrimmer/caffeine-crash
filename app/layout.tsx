@@ -11,7 +11,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        {children}
+        <div className="app-root">{children}</div>
         <Analytics />
       </body>
     </html>

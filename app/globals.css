@@ -3,26 +3,34 @@
 @tailwind utilities;
 
 :root {
+  --page-background:
+    radial-gradient(circle at top left, rgba(244, 220, 192, 0.68), transparent 30rem),
+    linear-gradient(135deg, #fffaf1 0%, #fff4df 52%, #f8dfc0 100%);
   color-scheme: light;
   background-color: #fff7ea;
+  background: var(--page-background);
 }
 
 html {
   min-height: 100%;
   scroll-behavior: smooth;
   overflow-x: hidden;
-  background:
-    radial-gradient(circle at top left, rgba(244, 220, 192, 0.68), transparent 30rem),
-    linear-gradient(135deg, #fffaf1 0%, #fff4df 52%, #f8dfc0 100%);
+  background: var(--page-background);
 }
 
 body {
+  margin: 0;
   min-height: 100vh;
   min-height: 100dvh;
-  background:
-    radial-gradient(circle at top left, rgba(244, 220, 192, 0.68), transparent 30rem),
-    linear-gradient(135deg, #fffaf1 0%, #fff4df 52%, #f8dfc0 100%);
+  background: var(--page-background);
   color: #2a170f;
+  overflow-x: hidden;
+}
+
+.app-root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--page-background);
   overflow-x: hidden;
 }
 
